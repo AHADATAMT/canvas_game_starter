@@ -238,7 +238,6 @@ function getMouseCoordinate(event) {
 // khi dat 20 con quai, game dung -> qua canh.
 
 function drawEndScene(event) {
-  win or lose
   startBtn.width = 85;
   startBtn.height = 40;
   startBtn.x = canvas.width / 2 - startBtn.width / 2;
