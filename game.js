@@ -12,8 +12,11 @@ We also load all of our images.
 
 let canvas;
 let ctx;
-let controlSence = true;
+let controlScreen = true;
 let startedAt;
+let level = 'green';
+let currentRecord = 0;
+let newRecord = 0;
 
 canvas = document.createElement("canvas");
 ctx = canvas.getContext("2d");
@@ -27,12 +30,12 @@ let startBtn = {
   width: 0,
   height: 0
 }
+
 let seconds = 0;
-let showTime = 0;
 let welMess_x, welMess_y; const welMess_len = 200;
 let START_x, START_y, START_len;
-let bgReady, heroReady, monsterReady;
-let bgImage, heroImage, monsterImage;
+let bgReady, heroReady, monsterReady, mushroomReady;
+let bgImage, heroImage, monsterImage, mushroomImage;
 let message = "Welcome to Pixel Game";
 let strInBtn = "START";
 
@@ -48,7 +51,7 @@ function loadImages() {
     // show the hero image
     heroReady = true;
   };
-  heroImage.src = "images/red-left.png";
+  heroImage.src = "images/green-left.png";
 
   monsterImage = new Image();
   monsterImage.onload = function () {
@@ -56,13 +59,20 @@ function loadImages() {
     monsterReady = true;
   };
   monsterImage.src = "images/monster0.png";
+
+  mushroomImage = new Image();
+  mushroomImage.onload = function () {
+    // show the mushroom image
+    mushroomReady = false;
+  };
+  mushroomImage.src = "images/mushroom.png";
 }
 
 function countUpTimer() {
 
   var now = new Date().getTime();
   var distance = now - startedAt;
-  seconds = Math.floor((distance / 1000));
+  seconds = Math.floor((distance / 100))/10;
 
 }
 /** 
@@ -80,6 +90,9 @@ let heroY = canvas.height / 2;
 
 let monsterX = 100;
 let monsterY = 100;
+
+const mushroomX = Math.random() * (canvas.width - 150);
+const mushroomY = Math.random() * (canvas.height - 150);
 let score = 0;
 /** 
  * Keyboard Listeners
@@ -119,45 +132,58 @@ let update = function () {
   }
   if (37 in keysDown) { // Player is holding left key
     {
-      heroImage.src = "images/red-left.png";
+      heroImage.src = `images/${level}-left.png`;
       if ((heroX - 5) >= 10 && (heroX - 5) <= canvas.width - 32)
         heroX -= 5;
     }
-
   }
   if (39 in keysDown) { // Player is holding right key
     {
-      heroImage.src = "images/red-right.png";
+      heroImage.src = `images/${level}-right.png`;
       if ((heroX + 5) >= 10 && (heroX + 5) <= canvas.width - 32)
         heroX += 5;
     }
-
   }
   const monsterArr = [0, 1, 2, 3];
+
+  // Touch mushroom
+  if (
+    heroX <= (mushroomX + 25)
+    && mushroomX <= (heroX + 25)
+    && heroY <= (mushroomY + 25)
+    && mushroomY <= (heroY + 25)) {
+    level = "red";
+    mushroomReady = false;
+  }
+
   // Check if player and monster collided. Our images
   // are about 32 pixels big.
   if (
-    heroX <= (monsterX + 32)
-    && monsterX <= (heroX + 32)
-    && heroY <= (monsterY + 32)
-    && monsterY <= (heroY + 32)
+    heroX <= (monsterX + 25)
+    && monsterX <= (heroX + 25)
+    && heroY <= (monsterY + 25)
+    && monsterY <= (heroY + 25)
   ) {
     // Pick a new location for the monster.
-    // Note: Change this to place the monster at a new, random location.
     monsterX = Math.random() * (canvas.width - 50);
     monsterY = Math.random() * (canvas.height - 50);
     // Swap random monster
     let iM = Math.floor(Math.random() * 3);
     monsterImage.src = `images/monster${monsterArr[iM]}.png`;
-    // Score + 1
     score += 1;
+    if (score == 10) {
+      // show mushroom
+      mushroomReady = true;
+    }
+
     if (score >= 20) {
-      showTime = seconds;
-      controlSence = true;
+      newRecord = seconds;
+      controlScreen = true;
       message = "Mission Complete";
       strInBtn = "RESTART";
     }
   }
+
 };
 
 /**
@@ -167,9 +193,9 @@ var render = function () {
   if (bgReady) {
     ctx.drawImage(bgImage, 0, 0);
   }
-  if (controlSence) {
+  if (controlScreen) {
     startedAt = new Date().getTime();
-    drawControlSence(message, strInBtn);
+    drawControlScreen(message, strInBtn);
     return;
   }
   if (heroReady) {
@@ -178,9 +204,12 @@ var render = function () {
   if (monsterReady) {
     ctx.drawImage(monsterImage, monsterX, monsterY);
   }
+  if (mushroomReady) {
+    ctx.drawImage(mushroomImage, mushroomX, mushroomY);
+  }
   ctx.font = "25px VT323";
   ctx.fillText(`Score: ${score}/20`, 10, 15);
-  let MaxWidthText_time = 55;
+  let MaxWidthText_time = 90;
   ctx.fillText(`Time: ${seconds}`, canvas.width - MaxWidthText_time - 10, 15, MaxWidthText_time);
 
 };
@@ -192,7 +221,7 @@ var render = function () {
  */
 var main = function () {
   render();
-  if (!controlSence)
+  if (!controlScreen)
     update();
   // Request to do this again ASAP. This is a special method
   // for web browsers.
@@ -211,16 +240,23 @@ main();
 
 //Hanel click event
 canvas.addEventListener('click', (evnet) => {
-  if (controlSence) {
-    if (isInside(getMouseCoordinate(event), startBtn)) {
-      controlSence = false;
-      score = 0;
+  if (controlScreen) {
+    if (isClicked(getMouseCoordinate(event), startBtn)) {
+      controlScreen = false;
+      console.log(currentRecord);
+      if (currentRecord > 0) {
+        currentRecord = newRecord < currentRecord ? newRecord : currentRecord;
+      } else {
+        currentRecord = newRecord;
+      }
+      console.log(currentRecord);
+      score = 15;
     }
   }
 })
 
 
-function drawControlSence(message, strInBtn) {
+function drawControlScreen(message, strInBtn) {
 
   startBtn.width = 85;
   startBtn.height = 40;
@@ -240,11 +276,22 @@ function drawControlSence(message, strInBtn) {
   ctx.fillText(strInBtn, START_x, START_y, START_len);
   // complete => show timer
   if (message == "Mission Complete") {
-    ctx.fillText(`Time: ${showTime}`, welMess_x + 20, START_y + 70, welMess_len);
+
+    if (newRecord < currentRecord) {
+      ctx.fillText(`WOW! New record: ${newRecord}s`, welMess_x + 20 - 50, START_y + 70, 250);
+    }
+    else {
+      ctx.font = "30px VT323";
+      ctx.fillText(`Time: ${newRecord}s`, welMess_x + 20, START_y + 70, welMess_len);
+      if (currentRecord > 0) {
+        ctx.fillText(`The best: ${currentRecord}s`, welMess_x + 20, START_y + 90, welMess_len + 50);
+      }
+    }
+
   }
 }
 
-function isInside(pos, rect) {
+function isClicked(pos, rect) {
   return (
     pos.x > rect.x &&
     pos.x < rect.x + rect.width &&
@@ -257,4 +304,14 @@ function getMouseCoordinate(event) {
     x: event.pageX,
     y: event.pageY
   }
+}
+
+function isHighScore(newRecord) {
+  if (currentRecord == 0) {
+    return true;
+  }
+  if (newRecord < currentRecord) {
+    return true;
+  }
+  return false;
 }
