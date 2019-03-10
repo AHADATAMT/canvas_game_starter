@@ -12,9 +12,9 @@ We also load all of our images.
 
 let canvas;
 let ctx;
-let startScene = true;
-let EndScene = false;
+let controlSence = true;
 let startedAt;
+
 canvas = document.createElement("canvas");
 ctx = canvas.getContext("2d");
 canvas.width = 512;
@@ -28,10 +28,13 @@ let startBtn = {
   height: 0
 }
 let seconds = 0;
+let showTime = 0;
 let welMess_x, welMess_y; const welMess_len = 200;
 let START_x, START_y, START_len;
 let bgReady, heroReady, monsterReady;
 let bgImage, heroImage, monsterImage;
+let message = "Welcome to Pixel Game";
+let strInBtn = "START";
 
 function loadImages() {
   bgImage = new Image();
@@ -45,14 +48,14 @@ function loadImages() {
     // show the hero image
     heroReady = true;
   };
-  heroImage.src = "images/hero.png";
+  heroImage.src = "images/red-left.png";
 
   monsterImage = new Image();
   monsterImage.onload = function () {
     // show the monster image
     monsterReady = true;
   };
-  monsterImage.src = "images/monster.png";
+  monsterImage.src = "images/monster0.png";
 }
 
 function countUpTimer() {
@@ -77,7 +80,6 @@ let heroY = canvas.height / 2;
 
 let monsterX = 100;
 let monsterY = 100;
-
 let score = 0;
 /** 
  * Keyboard Listeners
@@ -106,22 +108,32 @@ function setupKeyboardListeners() {
  *  If you change the value of 5, the player will move at a different rate.
  */
 let update = function () {
-
   countUpTimer();
-
   if (38 in keysDown) { // Player is holding up key
-    heroY -= 5;
+    if ((heroY - 5) >= 10 && (heroY - 5) <= canvas.height - 32 - 10) // The user cannot move her character off the screen.
+      heroY -= 5;
   }
   if (40 in keysDown) { // Player is holding down key
-    heroY += 5;
+    if ((heroY + 5) >= 10 && (heroY + 5) <= canvas.height - 32 - 10)
+      heroY += 5;
   }
   if (37 in keysDown) { // Player is holding left key
-    heroX -= 5;
+    {
+      heroImage.src = "images/red-left.png";
+      if ((heroX - 5) >= 10 && (heroX - 5) <= canvas.width - 32)
+        heroX -= 5;
+    }
+
   }
   if (39 in keysDown) { // Player is holding right key
-    heroX += 5;
-  }
+    {
+      heroImage.src = "images/red-right.png";
+      if ((heroX + 5) >= 10 && (heroX + 5) <= canvas.width - 32)
+        heroX += 5;
+    }
 
+  }
+  const monsterArr = [0, 1, 2, 3];
   // Check if player and monster collided. Our images
   // are about 32 pixels big.
   if (
@@ -134,8 +146,17 @@ let update = function () {
     // Note: Change this to place the monster at a new, random location.
     monsterX = Math.random() * (canvas.width - 50);
     monsterY = Math.random() * (canvas.height - 50);
+    // Swap random monster
+    let iM = Math.floor(Math.random() * 3);
+    monsterImage.src = `images/monster${monsterArr[iM]}.png`;
     // Score + 1
     score += 1;
+    if (score >= 20) {
+      showTime = seconds;
+      controlSence = true;
+      message = "Mission Complete";
+      strInBtn = "RESTART";
+    }
   }
 };
 
@@ -146,13 +167,9 @@ var render = function () {
   if (bgReady) {
     ctx.drawImage(bgImage, 0, 0);
   }
-  if (startScene) {
+  if (controlSence) {
     startedAt = new Date().getTime();
-    drawStartScene();
-    return;
-  }
-  if (EndScene) {
-    drawEndScene();
+    drawControlSence(message, strInBtn);
     return;
   }
   if (heroReady) {
@@ -175,7 +192,7 @@ var render = function () {
  */
 var main = function () {
   render();
-  if (!startScene)
+  if (!controlSence)
     update();
   // Request to do this again ASAP. This is a special method
   // for web browsers.
@@ -194,14 +211,17 @@ main();
 
 //Hanel click event
 canvas.addEventListener('click', (evnet) => {
-  if (startScene) {
-    if (isInside(getMouseCoordinate(event), startBtn))
-      startScene = false;
+  if (controlSence) {
+    if (isInside(getMouseCoordinate(event), startBtn)) {
+      controlSence = false;
+      score = 0;
+    }
   }
 })
 
 
-function drawStartScene(event) {
+function drawControlSence(message, strInBtn) {
+
   startBtn.width = 85;
   startBtn.height = 40;
   startBtn.x = canvas.width / 2 - startBtn.width / 2;
@@ -214,10 +234,14 @@ function drawStartScene(event) {
   ctx.fillStyle = "#23401d";
   ctx.font = "50px VT323";
 
-  ctx.fillText("Wellcome to PixelGame", welMess_x, welMess_y, welMess_len);
+  ctx.fillText(message, welMess_x, welMess_y, welMess_len);
   ctx.fillRect(startBtn.x, startBtn.y, startBtn.width, startBtn.height);
   ctx.fillStyle = "white";
-  ctx.fillText("START", START_x, START_y, START_len);
+  ctx.fillText(strInBtn, START_x, START_y, START_len);
+  // complete => show timer
+  if (message == "Mission Complete") {
+    ctx.fillText(`Time: ${showTime}`, welMess_x + 20, START_y + 70, welMess_len);
+  }
 }
 
 function isInside(pos, rect) {
@@ -233,25 +257,4 @@ function getMouseCoordinate(event) {
     x: event.pageX,
     y: event.pageY
   }
-}
-
-// khi dat 20 con quai, game dung -> qua canh.
-
-function drawEndScene(event) {
-  startBtn.width = 85;
-  startBtn.height = 40;
-  startBtn.x = canvas.width / 2 - startBtn.width / 2;
-  startBtn.y = welMess_y + 10;
-  welMess_x = canvas.width / 2 - welMess_len / 2;
-  welMess_y = 150;
-  START_x = canvas.width / 2 - 50 / 2;
-  START_y = welMess_y + startBtn.height + 5
-  START_len = 50;
-  ctx.fillStyle = "#23401d";
-  ctx.font = "50px VT323";
-
-  ctx.fillText("Game Over", welMess_x, welMess_y, welMess_len);
-  ctx.fillRect(startBtn.x, startBtn.y, startBtn.width, startBtn.height);
-  ctx.fillStyle = "white";
-  ctx.fillText("Restart", START_x, START_y, START_len);
 }
