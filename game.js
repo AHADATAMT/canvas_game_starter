@@ -17,6 +17,11 @@ let startedAt;
 let level = 'green';
 let currentRecord = 0;
 let newRecord = 0;
+const bgMusic = new sound("sound/game_sound.mp3");
+const endMusic = new sound("sound/smb_stage_clear.wav");
+const touchMonsSound = new sound("sound/touch_monster.wav");
+const touchMushroom = new sound("sound/smb_vine.wav");
+
 
 canvas = document.createElement("canvas");
 ctx = canvas.getContext("2d");
@@ -72,7 +77,7 @@ function countUpTimer() {
 
   var now = new Date().getTime();
   var distance = now - startedAt;
-  seconds = Math.floor((distance / 100))/10;
+  seconds = Math.floor((distance / 100)) / 10;
 
 }
 /** 
@@ -91,8 +96,8 @@ let heroY = canvas.height / 2;
 let monsterX = 100;
 let monsterY = 100;
 
-const mushroomX = Math.random() * (canvas.width - 150);
-const mushroomY = Math.random() * (canvas.height - 150);
+let mushroomX = Math.random() * (canvas.width - 150);
+let mushroomY = Math.random() * (canvas.height - 150);
 let score = 0;
 /** 
  * Keyboard Listeners
@@ -151,8 +156,10 @@ let update = function () {
     heroX <= (mushroomX + 25)
     && mushroomX <= (heroX + 25)
     && heroY <= (mushroomY + 25)
-    && mushroomY <= (heroY + 25)) {
+    && mushroomY <= (heroY + 25)
+    && mushroomReady) {
     level = "red";
+    touchMushroom.play();
     mushroomReady = false;
   }
 
@@ -164,6 +171,7 @@ let update = function () {
     && heroY <= (monsterY + 25)
     && monsterY <= (heroY + 25)
   ) {
+    touchMonsSound.play();
     // Pick a new location for the monster.
     monsterX = Math.random() * (canvas.width - 50);
     monsterY = Math.random() * (canvas.height - 50);
@@ -177,6 +185,8 @@ let update = function () {
     }
 
     if (score >= 20) {
+      endMusic.play();
+      bgMusic.stop();
       newRecord = seconds;
       controlScreen = true;
       message = "Mission Complete";
@@ -220,6 +230,7 @@ var render = function () {
  * render (based on the state of our game, draw the right things)
  */
 var main = function () {
+
   render();
   if (!controlScreen)
     update();
@@ -242,15 +253,21 @@ main();
 canvas.addEventListener('click', (evnet) => {
   if (controlScreen) {
     if (isClicked(getMouseCoordinate(event), startBtn)) {
+      bgMusic.play();
       controlScreen = false;
-      console.log(currentRecord);
+      // Update record
       if (currentRecord > 0) {
         currentRecord = newRecord < currentRecord ? newRecord : currentRecord;
       } else {
         currentRecord = newRecord;
       }
-      console.log(currentRecord);
-      score = 15;
+      // reset score
+      score = 0;
+      // reset level
+      heroImage.src = "images/green-left.png";
+      level = "green";
+      endMusic.stop();
+
     }
   }
 })
@@ -299,6 +316,7 @@ function isClicked(pos, rect) {
     pos.y > rect.y
   );
 }
+
 function getMouseCoordinate(event) {
   return {
     x: event.pageX,
@@ -307,11 +325,28 @@ function getMouseCoordinate(event) {
 }
 
 function isHighScore(newRecord) {
-  if (currentRecord == 0) {
+  if (currentRecord == 0)
     return true;
-  }
-  if (newRecord < currentRecord) {
+  if (newRecord < currentRecord)
     return true;
-  }
   return false;
+}
+
+function sound(src) {
+  this.sound = document.createElement("audio");
+  this.sound.src = src;
+  this.sound.setAttribute("preload", "auto");
+  this.sound.setAttribute("controls", "none");
+  this.sound.style.display = "none";
+  document.body.appendChild(this.sound);
+  this.play = function () {
+    this.sound.play();
+  }
+  this.stop = function () {
+    this.sound.pause();
+  }
+}
+
+function drawCricle(){
+  
 }
