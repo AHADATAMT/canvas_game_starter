@@ -21,7 +21,7 @@ const bgMusic = new sound("sound/game_sound.mp3");
 const endMusic = new sound("sound/smb_stage_clear.wav");
 const touchMonsSound = new sound("sound/touch_monster.wav");
 const touchMushroom = new sound("sound/smb_vine.wav");
-
+let bombReady = false;
 
 canvas = document.createElement("canvas");
 ctx = canvas.getContext("2d");
@@ -43,6 +43,7 @@ let bgReady, heroReady, monsterReady, mushroomReady;
 let bgImage, heroImage, monsterImage, mushroomImage;
 let message = "Welcome to Pixel Game";
 let strInBtn = "START";
+let bomb = new Bomb();
 
 function loadImages() {
   bgImage = new Image();
@@ -71,6 +72,8 @@ function loadImages() {
     mushroomReady = false;
   };
   mushroomImage.src = "images/mushroom.png";
+
+
 }
 
 function countUpTimer() {
@@ -183,7 +186,10 @@ let update = function () {
       // show mushroom
       mushroomReady = true;
     }
-
+    if (score == 5) {
+      // show Bomb
+      bombReady = true;
+    }
     if (score >= 20) {
       endMusic.play();
       bgMusic.stop();
@@ -222,6 +228,9 @@ var render = function () {
   let MaxWidthText_time = 90;
   ctx.fillText(`Time: ${seconds}`, canvas.width - MaxWidthText_time - 10, 15, MaxWidthText_time);
 
+  if (bombReady) {
+    bomb.update();
+  }
 };
 
 /**
@@ -262,7 +271,7 @@ canvas.addEventListener('click', (evnet) => {
         currentRecord = newRecord;
       }
       // reset score
-      score = 0;
+      score = 4;
       // reset level
       heroImage.src = "images/green-left.png";
       level = "green";
@@ -347,6 +356,31 @@ function sound(src) {
   }
 }
 
-function drawCricle(){
-  
+function Bomb() {
+
+  this.x = Math.random() * (canvas.width - 50);
+  this.y = Math.random() * (canvas.height - 50);
+  this.xI = 5;
+  this.yI = 5;
+
+  this.draw = function () {
+
+    let bombImgae = new Image();
+    bombImgae.src = "images/bomb.png";
+    ctx.drawImage(bombImgae, this.x, this.y);
+  }
+
+  this.update = function () {
+
+    if (this.x >= (canvas.width - 50) || this.x <= 5) {
+      this.xI = -this.xI;
+    }
+    if (this.y >= (canvas.height - 50) || this.y <= 5) {
+      this.yI = -this.yI;
+    }
+
+    this.x += this.xI;
+    this.y += this.yI;
+    this.draw();
+  }
 }

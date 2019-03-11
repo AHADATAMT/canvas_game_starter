@@ -51,7 +51,7 @@ The following **additional** features are implemented:
 
 ## Time Spent and Lessons Learned
 
-Time spent: **X** hours spent in total.
+Time spent: 10 hours spent in total.
 
 Describe any challenges encountered while building the app.
 
