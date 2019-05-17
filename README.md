@@ -1,4 +1,4 @@
-# CoderSchool FTW - * Nam, the Monster Hunter *
+# CoderSchool FTW - *The Monster Hunter *
 
 Created with love by: Charles Lee
   
